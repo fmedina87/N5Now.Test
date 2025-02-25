@@ -47,12 +47,16 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile # Asegurar que el Dockerfile está en la raíz o cambiar la ruta
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+
+      - name: Verify build logs
+        run: docker images | grep ${{ env.IMAGE_NAME }}
 
       - name: Sign the published Docker image
         if: github.event_name != 'pull_request'
