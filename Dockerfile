@@ -1,24 +1,22 @@
 # Usa la imagen oficial de .NET SDK para compilar la aplicación
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copia el archivo .csproj y restaura solo las dependencias (optimiza caché)
-COPY N5Now.Test.Api/*.csproj ./N5Now.Test.Api/
-WORKDIR /src/N5Now.Test.Api
+# Copia los archivos del proyecto y restaura las dependencias
+COPY *.csproj ./
 RUN dotnet restore
 
 # Copia todo el código fuente y compila la aplicación
-COPY . .
-RUN dotnet publish -c Release -o /app/publish --no-restore
+COPY . ./
+RUN dotnet publish -c Release -o /app/publish
 
 # Usa una imagen ligera de .NET Runtime para ejecutar la aplicación
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Expone puertos HTTP y HTTPS
+# Expone el puerto 80 para acceso HTTP
 EXPOSE 80
-EXPOSE 443
 
 # Comando de inicio
 ENTRYPOINT ["dotnet", "N5Now.Test.Api.dll"]
