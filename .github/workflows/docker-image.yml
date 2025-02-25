@@ -1,18 +1,35 @@
-name: Docker Image CI
+name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - main  # Ejecutar cuando haya cambios en la rama principal
 
 jobs:
-
-  build:
-
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      # Paso 1: Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Paso 2: Loguearse en GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      # Paso 3: Configurar el Dockerfile y la construcción de la imagen
+      - name: Build Docker image
+        run: |
+          # Cambiar al directorio donde se encuentra tu Dockerfile
+          docker build -f N5Now.Test.Api/Dockerfile -t ghcr.io/${{ github.repository_owner }}/n5now-test-api:latest .
+
+      # Paso 4: Push de la imagen al registro
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/n5now-test-api:latest
+
+      # Paso 5: Limpiar las imágenes locales (opcional)
+      - name: Remove local images
+        run: |
+          docker rmi ghcr.io/${{ github.repository_owner }}/n5now-test-api:latest
